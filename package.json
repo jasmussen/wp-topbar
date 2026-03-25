@@ -1,0 +1,15 @@
+{
+  "name": "wordpress-omnibar",
+  "version": "0.1.0",
+  "description": "A React-based replacement for the WordPress admin bar.",
+  "scripts": {
+    "build": "wp-scripts build",
+    "start": "wp-scripts start"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^27.0.0"
+  },
+  "dependencies": {
+    "@wordpress/icons": "^10.0.0"
+  }
+}
