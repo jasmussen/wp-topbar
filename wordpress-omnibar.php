@@ -19,6 +19,12 @@ class WP_Omnibar {
 	private array $plugin_nodes = [];
 
 	/**
+	 * Frontend contextual edit links (Edit Page, Edit Site, etc.),
+	 * collected from $wp_admin_bar after WordPress computes them.
+	 */
+	private array $contextual_links = [];
+
+	/**
 	 * Core node IDs that we handle ourselves in React — exclude from plugin nodes.
 	 */
 	private const CORE_NODES = [
@@ -36,11 +42,45 @@ class WP_Omnibar {
 		// Collect third-party plugin nodes — disabled while we decide how to handle plugin slots.
 		// add_action( 'wp_before_admin_bar_render', [ $this, 'collect_plugin_nodes' ], PHP_INT_MAX );
 
+		// Frontend-only: collect contextual edit links (Edit Page, Edit Site).
+		if ( ! is_admin() ) {
+			add_action( 'wp_before_admin_bar_render', [ $this, 'collect_contextual_links' ], PHP_INT_MAX );
+		}
+
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
 		add_action( 'admin_footer',          [ $this, 'output_data' ], 1 );
 
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue' ] );
 		add_action( 'wp_footer',          [ $this, 'output_data' ], 1 );
+	}
+
+	/**
+	 * Collect frontend contextual edit links from the nodes WordPress itself adds.
+	 * We read 'edit' (Edit Page / Edit Post / Edit Term) and 'site-editor' (Edit Site)
+	 * directly from $wp_admin_bar so we inherit all of WordPress's capability and
+	 * context checks for free, without reimplementing them.
+	 */
+	public function collect_contextual_links() {
+		global $wp_admin_bar;
+
+		if ( ! $wp_admin_bar ) {
+			return;
+		}
+
+		// Node IDs WordPress adds for frontend contextual editing.
+		$contextual_ids = [ 'edit', 'site-editor' ];
+
+		foreach ( $contextual_ids as $id ) {
+			$node = $wp_admin_bar->get_node( $id );
+			if ( ! $node || empty( $node->href ) ) {
+				continue;
+			}
+			$this->contextual_links[] = [
+				'id'    => $id,
+				'title' => wp_strip_all_tags( $node->title ),
+				'href'  => $node->href,
+			];
+		}
 	}
 
 	/**
@@ -114,6 +154,7 @@ class WP_Omnibar {
 			'adminUrl'     => admin_url(),
 			'updateCount'  => (int) ( $update_data['counts']['total'] ?? 0 ),
 			'commentCount' => (int) ( $comment_count->moderated ?? 0 ),
+			'contextualLinks' => $this->contextual_links,
 			// 'pluginNodes'  => $this->plugin_nodes, // disabled — see collect_plugin_nodes()
 			'user'         => [
 				'id'          => $current_user->ID,

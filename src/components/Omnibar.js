@@ -19,7 +19,7 @@ function OmnibarItem( { href, icon, label, count, onClick, className = '' } ) {
 }
 
 export default function Omnibar( { data } ) {
-	const { siteTitle, siteUrl, adminUrl, updateCount, commentCount, /* pluginNodes, */ user } = data;
+	const { siteTitle, siteUrl, adminUrl, updateCount, commentCount, contextualLinks = [], /* pluginNodes, */ user } = data;
 
 	return (
 		<div className="wp-omnibar">
@@ -34,6 +34,11 @@ export default function Omnibar( { data } ) {
 			<OmnibarItem label={ displayShortcut.primary( 'k' ) } onClick={ openCommandCenter } />
 
 			<OmnibarItem href={ `${ adminUrl }post-new.php` } label="New" />
+
+			{ /* Contextual edit links — frontend only (Edit Page, Edit Site, etc.) */ }
+			{ contextualLinks.map( ( link ) => (
+				<OmnibarItem key={ link.id } href={ link.href } label={ link.title } />
+			) ) }
 
 			{ /*
 			 * Plugin nodes — items registered by third-party plugins via $wp_admin_bar->add_node().
