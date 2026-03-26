@@ -1,8 +1,10 @@
-import { useDispatch } from '@wordpress/data';
 import { displayShortcut } from '@wordpress/keycodes';
-import { store as commandsStore } from '@wordpress/commands';
 import { Icon, update, comment, help } from '@wordpress/icons';
 import WpLogo from './WpLogo';
+
+function openCommandCenter() {
+	window.wp?.data?.dispatch( 'core/commands' )?.open();
+}
 
 function OmnibarItem( { href, icon, label, count, onClick, className = '' } ) {
 	const Tag = href ? 'a' : 'button';
@@ -17,8 +19,7 @@ function OmnibarItem( { href, icon, label, count, onClick, className = '' } ) {
 }
 
 export default function Omnibar( { data } ) {
-	const { siteTitle, adminUrl, updateCount, commentCount, user } = data;
-	const { open: openCommandCenter } = useDispatch( commandsStore );
+	const { siteTitle, siteUrl, adminUrl, updateCount, commentCount, /* pluginNodes, */ user } = data;
 
 	return (
 		<div className="wp-omnibar">
@@ -28,14 +29,34 @@ export default function Omnibar( { data } ) {
 				<WpLogo />
 			</a>
 
-			<OmnibarItem href={ adminUrl } label={ siteTitle } />
+			<OmnibarItem href={ siteUrl } label={ siteTitle } />
 
 			<OmnibarItem label={ displayShortcut.primary( 'k' ) } onClick={ openCommandCenter } />
 
 			<OmnibarItem href={ `${ adminUrl }post-new.php` } label="New" />
 
-			{ /* Spacer */ }
+			{ /*
+			 * Plugin nodes — items registered by third-party plugins via $wp_admin_bar->add_node().
+			 * Collected in PHP (see wordpress-omnibar.php: collect_plugin_nodes), passed as pluginNodes[].
+			 * Each node: { id, title (may contain HTML), href, class }.
+			 * Rendered after the spacer so they appear between our left items and the right-side icons.
+			 * Kept here for reference while we decide how to handle third-party slots.
+			 *
+			 * NOTE: ⌘K (core/commands command palette) also surfaces through this slot when
+			 * Gutenberg is active — worth considering whether to handle it specially.
+			 */ }
 			<div className="wp-omnibar__spacer" />
+			{ /* pluginNodes.map( ( node ) => {
+				const Tag = node.href ? 'a' : 'span';
+				return (
+					<Tag
+						key={ node.id }
+						href={ node.href }
+						className={ `wp-omnibar__item wp-omnibar__item--text wp-omnibar__plugin-node ${ node.class }`.trim() }
+						dangerouslySetInnerHTML={ { __html: node.title } }
+					/>
+				);
+			} ) */ }
 
 			{ /* Right */ }
 			<OmnibarItem href={ `${ adminUrl }update-core.php` } icon={ update } count={ updateCount } />

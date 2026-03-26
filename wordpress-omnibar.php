@@ -13,9 +13,62 @@ defined( 'ABSPATH' ) || exit;
 
 class WP_Omnibar {
 
+	/**
+	 * Top-level nodes added by plugins, collected after the admin bar is built.
+	 */
+	private array $plugin_nodes = [];
+
+	/**
+	 * Core node IDs that we handle ourselves in React — exclude from plugin nodes.
+	 */
+	private const CORE_NODES = [
+		'wp-logo', 'about', 'wporg', 'documentation', 'support-forums', 'feedback',
+		'site-name', 'view-site', 'edit-site', 'dashboard',
+		'updates',
+		'comments',
+		'new-content', 'add-post', 'add-page', 'add-media', 'add-user', 'add-link',
+		'top-secondary', 'search',
+		'my-account', 'user-actions', 'user-info', 'edit-profile', 'logout',
+		'menu-toggle',
+	];
+
 	public function __construct() {
+		// Collect third-party plugin nodes — disabled while we decide how to handle plugin slots.
+		// add_action( 'wp_before_admin_bar_render', [ $this, 'collect_plugin_nodes' ], PHP_INT_MAX );
+
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
 		add_action( 'admin_footer',          [ $this, 'output_data' ], 1 );
+
+		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue' ] );
+		add_action( 'wp_footer',          [ $this, 'output_data' ], 1 );
+	}
+
+	/**
+	 * After all plugins have added their nodes, collect the non-core top-level ones.
+	 */
+	public function collect_plugin_nodes() {
+		global $wp_admin_bar;
+
+		if ( ! $wp_admin_bar ) {
+			return;
+		}
+
+		foreach ( $wp_admin_bar->get_nodes() as $id => $node ) {
+			// Top-level only (no parent, or parent is root).
+			if ( ! empty( $node->parent ) ) {
+				continue;
+			}
+			if ( in_array( $id, self::CORE_NODES, true ) ) {
+				continue;
+			}
+
+			$this->plugin_nodes[] = [
+				'id'    => $id,
+				'title' => $node->title,
+				'href'  => $node->href ?: null,
+				'class' => $node->meta['class'] ?? '',
+			];
+		}
 	}
 
 	public function enqueue() {
@@ -61,6 +114,7 @@ class WP_Omnibar {
 			'adminUrl'     => admin_url(),
 			'updateCount'  => (int) ( $update_data['counts']['total'] ?? 0 ),
 			'commentCount' => (int) ( $comment_count->moderated ?? 0 ),
+			// 'pluginNodes'  => $this->plugin_nodes, // disabled — see collect_plugin_nodes()
 			'user'         => [
 				'id'          => $current_user->ID,
 				'firstName'   => $current_user->first_name ?: strtok( $current_user->display_name, ' ' ),
