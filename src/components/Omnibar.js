@@ -1,5 +1,5 @@
 import { displayShortcut } from '@wordpress/keycodes';
-import { Icon, update, comment, help } from '@wordpress/icons';
+import { Icon, update, comment, help, search } from '@wordpress/icons';
 import WpLogo from './WpLogo';
 
 function openCommandCenter() {
@@ -31,8 +31,6 @@ export default function Omnibar( { data } ) {
 
 			<OmnibarItem href={ siteUrl } label={ siteTitle } />
 
-			<OmnibarItem label={ displayShortcut.primary( 'k' ) } onClick={ openCommandCenter } />
-
 			<OmnibarItem href={ `${ adminUrl }post-new.php` } label="New" />
 
 			{ /* Contextual edit links — frontend only (Edit Page, Edit Site, etc.) */ }
@@ -62,6 +60,13 @@ export default function Omnibar( { data } ) {
 					/>
 				);
 			} ) */ }
+
+			{ /* Search — absolutely centered on desktop, icon-only on mobile */ }
+			<button className="wp-omnibar__search" onClick={ openCommandCenter } aria-label="Search">
+				<Icon icon={ search } size={ 16 } />
+				<span className="wp-omnibar__search-label">Search</span>
+				<span className="wp-omnibar__search-shortcut">{ displayShortcut.primary( 'k' ) }</span>
+			</button>
 
 			{ /* Right */ }
 			<OmnibarItem href={ `${ adminUrl }update-core.php` } icon={ update } count={ updateCount } />

@@ -167,6 +167,7 @@ class WP_Omnibar {
 		];
 
 		echo '<script>window.wpOmnibarData = ' . wp_json_encode( $data ) . ';</script>' . "\n";
+		echo '<style>@media screen and (max-width:782px){html{--wp-admin--admin-bar--height:32px}html #wpadminbar{height:32px!important;min-height:32px!important}#wpadminbar *{font-size:13px!important;line-height:1!important}#wpadminbar .wp-omnibar__search{position:static;transform:none;width:auto;background:none;padding:0 4px;order:90}#wpadminbar .wp-omnibar__search svg{width:24px!important;height:24px!important;opacity:1!important}#wpadminbar .wp-omnibar__search-label,#wpadminbar .wp-omnibar__search-shortcut{display:none!important}}</style>' . "\n";
 	}
 }
 
